@@ -2,20 +2,79 @@
 - name: Install RPM packages
   dnf:
       name:
-      - freeipa-server
       - fedora-messaging
       - gcc
       - git
+      - httpd
       - ipa-client
+      - mod_auth_gssapi
+      - python3-mod_wsgi
       - poetry
       - python3-cryptography
       - python3-devel
       - python3-flask
       - python3-pip
+      - python3-wheel
+      - python3-virtualenv
       - vim
       state: present
 
+- name: Check if noggin is cloned already
+  become_user: vagrant
+  stat: path=noggin
+  register: noggin_dir
+
+- name: Clone noggin repository
+  become_user: vagrant
+  command: git clone https://github.com/fedora-infra/noggin.git
+  when: not (noggin_dir.stat.exists and noggin_dir.stat.isdir)
+
+- name: Allow apache to see /srv
+  sefcontext:
+    target: "/srv(/.*)?"
+    setype: httpd_sys_content_t
+
+- name: Allow apache to exec binary Python modules
+  sefcontext:
+    target: '/srv/venv/lib(64)?/.*\.so[0-9.]*'
+    setype: httpd_sys_script_exec_t
+
+- name: Create a directory for the virtualenv where Apache can see it
+  file:
+    name: /srv/venv
+    state: directory
+    mode: 0755
+    owner: vagrant
+    group: vagrant
+
+- name: Create the virtualenv and install poetry
+  pip:
+    name: poetry
+    virtualenv: /srv/venv
+    virtualenv_command: python -m venv
+  become: yes
+  become_user: vagrant
+
+- name: Tell poetry not to create a virtualenv
+  shell: /srv/venv/bin/poetry config virtualenvs.create false
+  args:
+    chdir: /home/vagrant/noggin/
+  become: yes
+  become_user: vagrant
+
+- name: Install python dependencies with poetry
+  shell: /srv/venv/bin/poetry install
+  args:
+    chdir: /home/vagrant/noggin/
+  become: yes
+  become_user: vagrant
+
+- name: Restore SELinux contexts
+  command: restorecon -irv /srv/
+
+
 - name: Enroll system as IPA client
+  ignore_errors: yes
   shell: |
     ipa-client-install --uninstall --unattended
     ipa-client-install \
@@ -29,26 +88,18 @@
       --no-ntp \
       --force-join
 
-- name: Check if noggin is cloned already
-  become_user: vagrant
-  stat: path=noggin
-  register: noggin_dir
-
-- name: Clone noggin repository
-  become_user: vagrant
-  command: git clone https://github.com/fedora-infra/noggin.git
-  when: not (noggin_dir.stat.exists and noggin_dir.stat.isdir)
-
-- name: install python deps with poetry
-  become_user: vagrant
-  command:
-    cmd: poetry install
-    chdir: noggin
-
 - name: Install the .bashrc
   copy:
     src: .bashrc
     dest: /home/vagrant/.bashrc
+    mode: 0644
+    owner: vagrant
+    group: vagrant
+
+- name: Copy wsgi
+  copy:
+    src: noggin.wsgi
+    dest: /srv/noggin.wsgi
     mode: 0644
     owner: vagrant
     group: vagrant
@@ -62,20 +113,26 @@
 - name: compile the translations
   become_user: vagrant
   command:
-    cmd: poetry run pybabel compile -d /home/vagrant/noggin/noggin/translations
+    cmd: /srv/venv/bin/poetry run pybabel compile -d /home/vagrant/noggin/noggin/translations
     chdir: noggin
 
-- name: Install the systemd unit files for noggin services
-  copy:
-    src: noggin.service
-    dest: /etc/systemd/system/noggin.service
-    mode: 0644
+- name: Create Apache service
+  file:
+    path: /etc/systemd/system/httpd.service.d
+    state: directory
+    mode: 0755
 
-- name: Start noggin service using systemd
+- name: Copy configs for Apache
+  copy: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - src: "httpd-noggin.conf"
+      dest: "/etc/httpd/conf.d/httpd-noggin.conf"
+
+- name: Enable and restart Apache
   systemd:
-    state: started
-    name: noggin
-    daemon_reload: yes
+    state: restarted
+    name: httpd
     enabled: yes
+    daemon_reload: yes
 
 - import_tasks: rabbitmq.yml
