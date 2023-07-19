@@ -1,6 +1,8 @@
 - name: Install RPM packages
   dnf:
     name:
+      - httpd
+      - python3-mod_wsgi
       - python3-devel
       - python3-pip
       - python3-setuptools
@@ -23,37 +25,68 @@
     repo: https://github.com/abompard/test-auth.git
     dest: /home/vagrant/test-auth
   notify:
-    - restart test-auth
+    - restart httpd
 
 - name: Install the app
   command:
     cmd: python3 setup.py install
     chdir: /home/vagrant/test-auth
-    creates: /usr/local/lib/python{{ py3ver }}/site-packages/fedora_test_auth-0.0.1-py{{ py3ver }}.egg
+    creates: /usr/local/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/fedora_test_auth-0.0.1-py{{ ansible_local["python"]["py3"]["version"] }}.egg
   notify:
-    - restart test-auth
+    - restart httpd
 
 - name: Copy the config file
   copy:
     src: config.py
-    dest: /home/vagrant/config.py
+    dest: /home/vagrant/test-auth.conf.py
     mode: 0644
     owner: vagrant
     group: vagrant
   notify:
-    - restart test-auth
+    - restart httpd
 
-- name: Install the systemd unit
+- name: Allow httpd to access vagrant's home dir
+  file:
+    path: /home/vagrant
+    mode: 0755
+
+- name: Allow apache to see /srv
+  sefcontext:
+    target: "/srv(/.*)?"
+    setype: httpd_sys_content_t
+
+- name: Copy wsgi
   copy:
-      src: app.service
-      dest: /etc/systemd/system/test-auth.service
-      mode: 0644
+    src: test-auth.wsgi
+    dest: /srv/test-auth.wsgi
+    mode: 0644
+    owner: vagrant
+    group: vagrant
   notify:
-    - restart test-auth
+    - restart httpd
 
-- name: Start service using systemd
+- name: Tune SELinux Policy
+  seboolean:
+    name: "{{ item }}"
+    state: yes
+    persistent: yes
+  with_items:
+    - httpd_use_fusefs
+    - httpd_can_network_connect
+    - httpd_read_user_content
+  notify:
+    - restart httpd
+
+- name: Copy configs for Apache
+  copy:
+    src: httpd.conf
+    dest: /etc/httpd/conf.d/test-auth.conf
+  notify:
+    - restart httpd
+
+- name: Enable and restart Apache
   systemd:
     state: started
-    name: test-auth
-    daemon_reload: yes
+    name: httpd
     enabled: yes
+    daemon_reload: yes

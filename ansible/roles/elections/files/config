@@ -2,4 +2,4 @@ SECRET_KEY = 'change me'
 DB_URL = 'sqlite:////var/tmp/elections_dev.sqlite'
 FEDORA_ELECTIONS_ADMIN_GROUP = 'elections'
 FASJSON = True
-FAS_BASE_URL = 'http://fasjson.tinystage.test/fasjson'
+FAS_BASE_URL = 'http://tinystage.tinystage.test/fasjson'

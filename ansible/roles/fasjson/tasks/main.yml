@@ -70,7 +70,7 @@
   command: bash /srv/setup-fasjson-service.sh
 
 - name: Get service keytab for HTTPd
-  shell: ipa-getkeytab -p HTTP/fasjson.tinystage.test -k /var/lib/gssproxy/httpd.keytab
+  shell: ipa-getkeytab -p HTTP/tinystage.tinystage.test -k /var/lib/gssproxy/httpd.keytab
   args:
     creates: /var/lib/gssproxy/httpd.keytab
   notify:

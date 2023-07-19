@@ -1,5 +1,5 @@
-- name: restart test-auth
+- name: restart httpd
   systemd:
-    name: test-auth
+    name: httpd
     state: restarted
     daemon_reload: yes

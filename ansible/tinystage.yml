@@ -10,6 +10,11 @@
   become_method: sudo
   roles:
     - common
+    - ipa-client
+    - cert
+    - ipsilon
+    - fasjson
+    - noggin
     - rabbitmq
     - fedora-messaging
     - mail

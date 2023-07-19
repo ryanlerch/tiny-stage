@@ -11,8 +11,8 @@ machines = {
     "hostmanager.aliases": ["kerberos"],
     "autostart": true,
   },
-  "fasjson": {"autostart": true},
-  "ipsilon": {"autostart": true},
+  #"fasjson": {"autostart": true},
+  #"ipsilon": {"autostart": true},
   "noggin": {},
   "elections": {},
   "mirrormanager2": {},
@@ -39,8 +39,8 @@ Vagrant.configure(2) do |config|
         config.vm.box_url = "https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-Vagrant-8.3.2011-20201204.2.x86_64.vagrant-libvirt.box"
         config.vm.box = "centos83-cloud-libvirt"
       else
-        machine.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/36/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-36-1.5.x86_64.vagrant-libvirt.box"
-        machine.vm.box = "f36-cloud-libvirt"
+        machine.vm.box_url = "https://download.fedoraproject.org/pub/fedora/linux/releases/38/Cloud/x86_64/images/Fedora-Cloud-Base-Vagrant-38-1.6.x86_64.vagrant-libvirt.box"
+        machine.vm.box = "f38-cloud-libvirt"
       end
       machine.vm.hostname = "#{mname}.#{domain}"
 

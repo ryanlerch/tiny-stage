@@ -17,11 +17,11 @@
 - name: Put tinystage root CA in the list of CA's for httplib2
   blockinfile:
     block: "{{ ca_crt.content | b64decode }}"
-    path: /usr/local/lib/python{{ py3ver }}/site-packages/httplib2/cacerts.txt
+    path: /usr/local/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/httplib2/cacerts.txt
 
 - name: register the application with oidc-register
   shell:
-    cmd: oidc-register --debug https://ipsilon.tinystage.test/idp/openidc/ {{ redirect_url }}
+    cmd: oidc-register --debug https://tinystage.tinystage.test/idp/openidc/ {{ redirect_url }}
     creates: /home/vagrant/client_secrets.json
   become: yes
   become_user: vagrant

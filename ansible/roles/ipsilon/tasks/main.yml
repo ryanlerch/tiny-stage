@@ -39,7 +39,7 @@
   command:
     cmd: ./install.sh
     chdir: /opt/ipsilon-fedora
-    creates: /usr/lib/python{{ py3ver }}/site-packages/ipsilon/providers/openidc/plugins/account-scopes.py
+    creates: /usr/lib/python{{ ansible_local["python"]["py3"]["version"] }}/site-packages/ipsilon/providers/openidc/plugins/account-scopes.py
 
 - name: kinit
   shell: echo "{{ ipa_admin_password }}" | kinit {{ ipa_admin_user }}@{{ krb_realm }}
@@ -142,20 +142,6 @@
     src: cors.conf
     dest: /etc/httpd/conf.d/cors.conf
 
-
-# we were hitting a condition where the key and cert were not there
-# yet before trying to restart apache. So we check they are here before
-# proceeding.
-
-- name: Check the cert is there
-  wait_for:
-    path: /etc/pki/tls/certs/server.pem
-    state: present
-
-- name: Check the key is there
-  wait_for:
-    path: /etc/pki/tls/private/server.key
-    state: present
 
 - name: Allow apache to access the public directory
   file:

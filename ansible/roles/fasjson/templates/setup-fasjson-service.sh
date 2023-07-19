@@ -2,7 +2,7 @@
 
 set -e
 
-PRINCIPAL="HTTP/fasjson.tinystage.test"
+PRINCIPAL="HTTP/tinystage.tinystage.test"
 DELEGATION="fasjson-delegation"
 
 ipa service-find $PRINCIPAL &> /dev/null || ipa service-add $PRINCIPAL --force

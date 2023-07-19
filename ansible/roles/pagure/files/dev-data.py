@@ -21,7 +21,7 @@ _config = pagure.config.reload_config()
 userslist = []
 
 from fasjson_client import Client
-c = Client('http://fasjson.tinystage.test/fasjson', principal='admin@TINYSTAGE.TEST')
+c = Client('http://tinystage.tinystage.test/fasjson', principal='admin@TINYSTAGE.TEST')
 
 def create_projects_git(folder, project):
     repo_path = os.path.join(folder, f'{project}')

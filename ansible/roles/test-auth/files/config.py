@@ -7,5 +7,5 @@ OIDC_SCOPES = [
     "https://id.fedoraproject.org/scope/groups",
     "https://id.fedoraproject.org/scope/agreements",
 ]
-OPENID_ENDPOINT = "https://ipsilon.tinystage.test/idp/openid/"
+OPENID_ENDPOINT = "https://tinystage.tinystage.test/idp/openid/"
 FAS_OPENID_ENDPOINT = OPENID_ENDPOINT
